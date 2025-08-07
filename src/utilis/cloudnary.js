@@ -40,13 +40,8 @@ export const uploadFileOnCloundinary = async (localFilePath) => {
                 console.log('Congrats your file has been removed from the local server ')
             }
            });
-            
 
-                    } else {
-            return null;
-            console.log('file isnt found')  
-
-            
+           return response;
         }
     } catch (error) {
         // fs for removing the file

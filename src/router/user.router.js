@@ -18,6 +18,9 @@ router.post('/register',upload.fields([
     }
 ]),userController.registerController);
 
+// test router 
+router.post('/test', userController.testController)
+
 
 
 

@@ -1,0 +1,142 @@
+
+[
+ 
+                                          pending topics  - 
+ .some (array methods)
+ field/ single/ array concept for upload ( multer)
+ multer
+ cloudanery
+
+]
+
+[
+    app.use(express.urlencoded({ extended: true })) // it parse incoming data from html form subbmission - visit doc (extand)
+    extand - controls how the incoming form  data parsed espaccially when dealing with nested object and arrays
+
+    extended: false	Parses only simple key-value pairs (a=1&b=2)  - it use the node.js cors qs-(queary string) module
+    extended: true	Supports nested objects and arrays (a[name]=abhi) - it use qs(queary string parser) 
+
+]
+
+[
+    app.cors - (cross orgin resource sharing) - is a security midware implimented by web browsers to control how resourses on 
+    a web page can be requested from another domain(domain)
+
+    optionsSuccessStatus: 200, // for old clients usege 200 instead of 204 (success but not response) - preFlight request
+    
+
+    //whitelist - pending 
+    
+]
+
+[
+    express.static() is a built-in middleware function in Express used to serve static files such as:
+    html, css, js, Image(PNG, JPG, etc), fonts, pdfs, vidios, etc...
+
+]
+
+
+[
+    cookie-parser - cookie-parser is a middleware for Express.js that parses cookies attached to the client's HTTP
+    request and makes them easily accessible via req.cookies.
+
+]
+
+[
+
+    /  mongoDB connection string releted old new version - pending
+    //   useNewUrlParser: true,
+    //   useUnifiedTopology: true,
+
+
+// It tells you what MongoDB host your application is connected to.
+        // console.log(`DB Connected ${connectionInstance.connection.host}`); 
+        // console.log(`DB Connected ${connectionInstance.connection.port}`); 
+        // console.log(`DB Connected ${connectionInstance.connection.name}`); 
+        // console.log(`DB Connected ${connectionInstance.connection.readyState}`); 
+        // use for the verfication
+// Accidentally running tests on the production database.
+
+// Deploying to production but connected to a test DB.
+
+
+        // console.log(`DB Connected ${connectionInstance.connection.readyState}`);  
+// it tell the status of the mongoDB connection in nodemon(0 to 3)
+// (0- Disconnected) (1-Connected) (2- connecting) (3- Disconected)
+
+]
+
+[
+
+    class and consturcture (super, new , this)  - pending
+]
+
+
+[
+    multer midware requirment
+     npm package
+     directry - where file has been storage on the server side
+     configuration for stroring in the disk or memory
+     file send to to the storage (cb-callback)
+]
+
+[
+
+    {recursive: true} - It allows creation of nested directories if they don’t exist.
+    
+]
+
+
+[
+    _dirname - (common.js item) - it return the current path of the directry where scrits runs.
+    (with module.js) - it cannot achive dirctly we use firsly url library (fileUrlToPath) then,
+    (_dirname ) from path
+
+    Obtain the current module's URL.
+
+    The import.meta.url property provides the full URL of the current module.
+
+    Convert the URL to a file path:
+
+    The fileURLToPath() function from the url module converts a file:// URL into a platform-specific file path. Extract the directory name.
+    
+    The dirname() function from the path module extracts the directory portion of a given file path.
+]
+
+[
+    path module builtIn in node.js - 
+    The path module provides utilities for working with file and directory paths in a consistent way across OS platforms (Windows, Linux, etc).
+
+    path.join([...paths])
+    Joins all path segments using the platform-specific separator (/ on POSIX, \ on Windows)
+
+    path.resolve([...paths])
+    Resolves an absolute path from right to left.
+
+    path.dirname(path)
+    Returns the directory name from a full path.
+
+    path.basename(path)
+    Returns the last portion of the path.
+
+    path.extname(path)
+    Returns the file extension.
+
+]
+
+[
+    URL module in node.js
+    The url module allows you to parse and work with URLs, but in the context of ESM, it is mainly used for:
+    Getting __filename and __dirname equivalents (which do not exist in ES Modules by default)
+
+    {
+        Because __dirname and __filename are only available in CommonJS — but ES Modules (using import) don't have them.    
+
+        So we use fileURLToPath(import.meta.url) from the url module to get these values.
+
+            import.meta.url → returns something like file:///C:/Users/.../file.js
+             fileURLToPath() → converts that to a normal file path
+             dirname() → gets the directory of that file
+    }
+]
+

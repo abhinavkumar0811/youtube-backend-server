@@ -14,14 +14,20 @@ export class ApiErrors extends Error{
         this.stack = stack
         this.data = null,
         this.success = false
-
-
-            if (stack) {  // use for testing - pending
-            this.stack = stack
-        } else{
-            Error.captureStackTrace(this, this.constructor)
-        }
-
     }
+
+    // toJSON(){
+        
+    //     return{
+    //         statusCode: this.statusCode,
+    //         message: this.message,
+    //         Error: this.errors,
+    //         Data: null,
+    //         Succes: this.success
+    //     }
+    // }
+
+   
+   
 }
 

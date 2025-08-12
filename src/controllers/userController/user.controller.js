@@ -8,8 +8,8 @@ import bcrypt from "bcrypt";
 const generateAccessTokenAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
+    const accessToken = await user.generateAccessToken();
+    const refreshToken = await user.generateRefreshToken();
 
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false }); // it will not validate directly save the refresh token
@@ -155,7 +155,7 @@ const logIn = async (req, res) => {
     //cookies send the access and refresh
     const options = {
       httpOnly: true,
-      secure: true,
+      secure: false,  // set to false for local testing
     };
 
     // send to the server and the user
@@ -184,6 +184,45 @@ const logIn = async (req, res) => {
 };
 
 // signOut
+const signOut = async (req, res) => {
+  // remove the accessToken
+
+try {
+    await User.findByIdAndUpdate(
+      req.user._id,
+      
+      {
+        $unset: {
+          refreshToken: 1  // this removes the field from document
+        },
+       
+      },
+       {
+          new: true
+        }
+    )
+       // it will remove the refresh token from the user and set it undefined
+        // remove the access and refresh token from the server
+  
+        const options = {
+          httpOnly: true,
+          secure: false  // set to false for local testing
+        }
+  
+        return res.status(200)
+            .clearCookie('accessToken',  options)
+            .clearCookie('refreshToken', options)
+            .json(
+               new ApiResponse(200, {} , 'user successfully logged out')
+            )
+  
+} catch (error) {
+  console.log('some error occurs while sign out', error)
+  return res.status(500).json(
+    new ApiErrors(500, 'some error occurs while sign out',[error.message])
+  )
+}
+}
 
 
 // test controller
@@ -200,4 +239,4 @@ const testController = async (req, res) => {
     });
   }
 };
-export default { registerController, testController, logIn };
+export default { registerController, testController, logIn, signOut};

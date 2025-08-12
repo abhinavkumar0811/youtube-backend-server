@@ -2,6 +2,8 @@ import express from "express";
 import userController from "../controllers/userController/user.controller.js";
 import { upload } from "../midwares/user/fileUpload.midware.js";
 import { rateLimitor } from "../midwares/user/rateLimitor.midware.js";
+import { jwtVarify } from "../midwares/user/authorize.midware.js";
+import { Route } from "express";
 
 const router = express.Router();
 
@@ -22,7 +24,8 @@ router.post(
   userController.registerController,
 );
 
-router.post("/loggedIn", userController.logIn);
+router.post("/loggedIn", rateLimitor, userController.logIn);
+router.post("/logout", jwtVarify , userController.signOut)
 
 // // maintanance route
 // router.get('/maintain', (req, res) =>{

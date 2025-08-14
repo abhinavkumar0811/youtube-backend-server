@@ -376,6 +376,51 @@ const updateUserData = async (req, res) => {
     res.status(500).json(new ApiErrors(500, 'Field to update user data', error));
   }
 }
+
+// update avatar images
+const updateAvaterImages = async (req, res) => {
+  
+  try {
+
+    const avatarLocalPath = req.file?.path;
+      if(!avatarLocalPath){
+        throw new ApiErrors(401, 'avatar file is missing');
+      }
+
+      // upload to the cloudinary
+      const avatar = await uploadFileOnCloundinary(avatarLocalPath);
+       if(!avatar.url){
+        throw new ApiErrors(401, 'Field to upload file on cloudinary');
+       }
+
+       const user = await User.findByIdAndUpdate(req.user?._id,
+        {
+             $set: {
+                 avatar: avatar.url
+             },
+             
+        },
+        {
+          new: true,
+        }
+       )
+
+       //send response
+       res.status(200)
+       .json(
+        new ApiResponse(200, user, 'Successfully image updated')
+       )
+     
+  } catch (error) {
+    console.log('Field to update avatar ::', error);
+    res.status(500)
+    .json(new ApiErrors(
+      500, 
+      "Field to update avatar image",
+      [error.message]
+    ))
+  }
+}
 // test controller
 const testController = async (req, res) => {
   try {
@@ -399,4 +444,5 @@ export default {
   changedPassword,
   getUser,
   updateUserData,
+  updateAvaterImages,
 };

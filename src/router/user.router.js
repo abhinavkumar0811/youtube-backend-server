@@ -4,6 +4,7 @@ import { upload } from "../midwares/user/fileUpload.midware.js";
 import { rateLimitor } from "../midwares/user/rateLimitor.midware.js";
 import { jwtVarify } from "../midwares/user/authorize.midware.js";
 import { Route } from "express";
+import multer from "multer";
 
 const router = express.Router();
 
@@ -25,10 +26,12 @@ router.post(
 );
 
 router.post("/loggedIn", rateLimitor, userController.logIn);
-router.post("/logout", jwtVarify , userController.signOut)
+router.post("/logout", jwtVarify, userController.signOut);
 router.patch("/changepassword", jwtVarify, userController.changedPassword);
-router.get('/user', jwtVarify, userController.getUser),
-router.patch('/updateuserdata', jwtVarify, userController.updateUserData)
+router.get("/user", jwtVarify, userController.getUser),
+router.patch("/updateuserdata", jwtVarify, userController.updateUserData);
+router.patch("/updateAvatar", jwtVarify, upload.single('avatar'), userController.updateAvaterImages)
+
 
 // // maintanance route
 // router.get('/maintain', (req, res) =>{

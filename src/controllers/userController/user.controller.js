@@ -5,7 +5,7 @@ import { ApiErrors } from "../../utilis/apiError.js";
 import { ApiResponse } from "../../utilis/apiResponse.js";
 import { uploadFileOnCloundinary } from "../../utilis/cloudnary.js";
 import bcrypt from "bcrypt";
-import jwt, { decode } from 'jsonwebtoken';
+import jwt, { decode } from "jsonwebtoken";
 
 // generate accessToken & refresh token
 const generateAccessTokenAndRefreshToken = async (userId) => {
@@ -138,51 +138,51 @@ const logIn = async (req, res) => {
     const user = await User.findOne({
       $or: [{ email }, { userName }],
     });
-    console.log('user::', user)
+    console.log("user::", user);
     if (!user) {
-      throw new ApiErrors(404, 'user does not exsited')
+      throw new ApiErrors(404, "user does not exsited");
     }
 
     const passwordValidation = await user.isCorrectPassword(password);
-    if(!passwordValidation){
-      throw new ApiErrors(409, 'Invalid password')
+    if (!passwordValidation) {
+      throw new ApiErrors(409, "Invalid password");
     }
 
     // make a refresh and access token
-    const {accessToken, refreshToken} = await generateAccessTokenAndRefreshToken(user._id);
+    const { accessToken, refreshToken } =
+      await generateAccessTokenAndRefreshToken(user._id);
 
     const loggedInUser = await User.findById(user._id).select(
-      "-password -refreshToken"
+      "-password -refreshToken",
     );
 
     //cookies send the access and refresh
     const options = {
       httpOnly: true,
-      secure: false,  // set to false for local testing
+      secure: false, // set to false for local testing
     };
 
     // send to the server and the user
-    return res.status(200)
-    .cookie('accessToken', accessToken, options)
-    .cookie('refreshToken', refreshToken, options)
-    .json(
-       new ApiResponse(
-         200,
-      {
-        loggedInUser , accessToken, refreshToken
-      },
-       'user logged in successfully'
-       )
-
-    )
-
-
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          {
+            loggedInUser,
+            accessToken,
+            refreshToken,
+          },
+          "user logged in successfully",
+        ),
+      );
   } catch (error) {
-    console.log("Error::", error)
-    return res.status(500)
-    .json(
-      new ApiErrors(500, "internal server error", [error.message])
-    )
+    console.log("Error::", error);
+    return res
+      .status(500)
+      .json(new ApiErrors(500, "internal server error", [error.message]));
   }
 };
 
@@ -190,142 +190,146 @@ const logIn = async (req, res) => {
 const signOut = async (req, res) => {
   // remove the accessToken
 
-try {
+  try {
     await User.findByIdAndUpdate(
       req.user._id,
-      
+
       {
         $unset: {
-          refreshToken: 1  // this removes the field from document
+          refreshToken: 1, // this removes the field from document
         },
-       
       },
-       {
-          new: true
-        }
-    )
-       // it will remove the refresh token from the user and set it undefined
-        // remove the access and refresh token from the server
-  
-        const options = {
-          httpOnly: true,
-          secure: false  // set to false for local testing
-        }
-  
-        return res.status(200)
-            .clearCookie('accessToken',  options)
-            .clearCookie('refreshToken', options)
-            .json(
-               new ApiResponse(200, {} , 'user successfully logged out')
-            )
-  
-} catch (error) {
-  console.log('some error occurs while sign out', error)
-  return res.status(500).json(
-    new ApiErrors(500, 'some error occurs while sign out',[error.message])
-  )
-}
-}
+      {
+        new: true,
+      },
+    );
+    // it will remove the refresh token from the user and set it undefined
+    // remove the access and refresh token from the server
 
-// access token generate again using refresh token 
-const refreshAccessToken = async (req, res) =>{
+    const options = {
+      httpOnly: true,
+      secure: false, // set to false for local testing
+    };
 
-   try {
+    return res
+      .status(200)
+      .clearCookie("accessToken", options)
+      .clearCookie("refreshToken", options)
+      .json(new ApiResponse(200, {}, "user successfully logged out"));
+  } catch (error) {
+    console.log("some error occurs while sign out", error);
+    return res
+      .status(500)
+      .json(
+        new ApiErrors(500, "some error occurs while sign out", [error.message]),
+      );
+  }
+};
+
+// access token generate again using refresh token
+const refreshAccessToken = async (req, res) => {
+  try {
     // get refresh token from the frontend and create a new access token using the current refresh token
-    const incommingRefreshToken = req.cookies?.refreshToken || req.body.refreshToken;
-    if(!incommingRefreshToken){
-      throw new ApiErrors(401, 'unauthorized request');
+    const incommingRefreshToken =
+      req.cookies?.refreshToken || req.body.refreshToken;
+    if (!incommingRefreshToken) {
+      throw new ApiErrors(401, "unauthorized request");
     }
-    //  if avaiable then move next 
-    const decodedToken = await jwtVarify(incommingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+    //  if avaiable then move next
+    const decodedToken = await jwtVarify(
+      incommingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET,
+    );
 
     const user = await User.findById(decodedToken._id);
-    if(!user){
-      throw new ApiErrors(401, 'Invalid refresh token')
+    if (!user) {
+      throw new ApiErrors(401, "Invalid refresh token");
     }
 
     // compare the incomming refresh token or stored refresh token
-    if(incommingRefreshToken  !== user?.refreshToken){
-      throw new ApiErrors(400, 'refresh token will expired or used') 
+    if (incommingRefreshToken !== user?.refreshToken) {
+      throw new ApiErrors(400, "refresh token will expired or used");
     }
 
-    //  if it avaible then move next 
-    const {accessToken, newRefreshToken} = await generateAccessTokenAndRefreshToken(user._id)
-    
-    // move next 
+    //  if it avaible then move next
+    const { accessToken, newRefreshToken } =
+      await generateAccessTokenAndRefreshToken(user._id);
+
+    // move next
     const options = {
       httpOnly: true,
-      secure: false // for testing from the local server
-    }
+      secure: false, // for testing from the local server
+    };
 
-    res.status(200)
-       .cookie('accessToken', accessToken, options)
-       .cookie('refreshToken', newRefreshToken, option)
-       .json(
+    res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", newRefreshToken, option)
+      .json(
         new ApiResponse(
           200,
-          {accessToken, refreshToken: newRefreshToken},
-          'accessToken refreshed'
-        )
-       )
-                              // not tested
-   } catch (error) {
-     console.log('Error:: Invalid  refresh token :: ', error)
-     new ApiErrors(500, 'Invalid refresh token', [error.message]);
-   }
-}
-
+          { accessToken, refreshToken: newRefreshToken },
+          "accessToken refreshed",
+        ),
+      );
+    // not tested
+  } catch (error) {
+    console.log("Error:: Invalid  refresh token :: ", error);
+    new ApiErrors(500, "Invalid refresh token", [error.message]);
+  }
+};
 
 // reset password
 const changedPassword = async (req, res) => {
-  
   try {
-    
-    const {oldPassword, newPassword, confirmPassword} = req.body;
+    const { oldPassword, newPassword, confirmPassword } = req.body;
 
-     if( !oldPassword || !newPassword || !confirmPassword ){
-      throw new ApiErrors(404, 'All fields are required')
-     }
-
-    
-    const user = await User.findById(req.user?._id);
-    const isCorrectPassword = await user.isCorrectPassword(oldPassword)
-    console.log('isCorrectPassword::', isCorrectPassword) 
-
-     if(!isCorrectPassword){
-      throw new ApiErrors(401, 'enter your currect password for reset');
-     }
-     
-    if(newPassword !== confirmPassword){
-      throw new ApiErrors(409, 'confirm password not match to new password')
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      throw new ApiErrors(404, "All fields are required");
     }
 
-    
-       user.password = newPassword;
-       await user.save({validateBeforeSave: false})
+    const user = await User.findById(req.user?._id);
+    const isCorrectPassword = await user.isCorrectPassword(oldPassword);
+    console.log("isCorrectPassword::", isCorrectPassword);
 
-      //  send the response
-      res.status(200)
-      .json(
-        new ApiResponse( 
-          200,
-          req.user,
-          "password changed successfully"
+    if (!isCorrectPassword) {
+      throw new ApiErrors(401, "enter your currect password for reset");
+    }
 
-        )
-      )
+    if (newPassword !== confirmPassword) {
+      throw new ApiErrors(409, "confirm password not match to new password");
+    }
 
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+
+    //  send the response
+    res
+      .status(200)
+      .json(new ApiResponse(200, req.user, "password changed successfully"));
   } catch (error) {
-    console.log('Field to changed password ::', error);
-    res.status(500)
-    .json(
-      new ApiErrors(500, 'field to change password', [error.message])
-    )
-    
+    console.log("Field to changed password ::", error);
+    res
+      .status(500)
+      .json(new ApiErrors(500, "field to change password", [error.message]));
   }
-}
+};
 
+// get the user
+const getUser = async (req, res) => {
+  try {
+    const user = req.user;
 
+    res
+      .status(200)
+      .json(new ApiResponse(200, user, "sucessfully fetch the user"));
+  } catch (error) {
+    console.log("Field to fetch the user", error);
+    res
+      .status(500)
+      .json(new ApiResponse(500, "Field to fetch the user", [error.message]));
+  }
+};
 // test controller
 const testController = async (req, res) => {
   try {
@@ -341,10 +345,11 @@ const testController = async (req, res) => {
   }
 };
 export default {
-                  registerController,
-                   testController,
-                   logIn, 
-                   signOut,
-                   refreshAccessToken,
-                   changedPassword
-                  };
+  registerController,
+  testController,
+  logIn,
+  signOut,
+  refreshAccessToken,
+  changedPassword,
+  getUser
+};

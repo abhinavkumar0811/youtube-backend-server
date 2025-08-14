@@ -1,8 +1,11 @@
+import { response } from "express";
+import { jwtVarify } from "../../midwares/user/authorize.midware.js";
 import { User } from "../../model/users.model.js";
 import { ApiErrors } from "../../utilis/apiError.js";
 import { ApiResponse } from "../../utilis/apiResponse.js";
 import { uploadFileOnCloundinary } from "../../utilis/cloudnary.js";
 import bcrypt from "bcrypt";
+import jwt, { decode } from 'jsonwebtoken';
 
 // generate accessToken & refresh token
 const generateAccessTokenAndRefreshToken = async (userId) => {
@@ -224,6 +227,104 @@ try {
 }
 }
 
+// access token generate again using refresh token 
+const refreshAccessToken = async (req, res) =>{
+
+   try {
+    // get refresh token from the frontend and create a new access token using the current refresh token
+    const incommingRefreshToken = req.cookies?.refreshToken || req.body.refreshToken;
+    if(!incommingRefreshToken){
+      throw new ApiErrors(401, 'unauthorized request');
+    }
+    //  if avaiable then move next 
+    const decodedToken = await jwtVarify(incommingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+    const user = await User.findById(decodedToken._id);
+    if(!user){
+      throw new ApiErrors(401, 'Invalid refresh token')
+    }
+
+    // compare the incomming refresh token or stored refresh token
+    if(incommingRefreshToken  !== user?.refreshToken){
+      throw new ApiErrors(400, 'refresh token will expired or used') 
+    }
+
+    //  if it avaible then move next 
+    const {accessToken, newRefreshToken} = await generateAccessTokenAndRefreshToken(user._id)
+    
+    // move next 
+    const options = {
+      httpOnly: true,
+      secure: false // for testing from the local server
+    }
+
+    res.status(200)
+       .cookie('accessToken', accessToken, options)
+       .cookie('refreshToken', newRefreshToken, option)
+       .json(
+        new ApiResponse(
+          200,
+          {accessToken, refreshToken: newRefreshToken},
+          'accessToken refreshed'
+        )
+       )
+                              // not tested
+   } catch (error) {
+     console.log('Error:: Invalid  refresh token :: ', error)
+     new ApiErrors(500, 'Invalid refresh token', [error.message]);
+   }
+}
+
+
+// reset password
+const changedPassword = async (req, res) => {
+  
+  try {
+    
+    const {oldPassword, newPassword, confirmPassword} = req.body;
+
+     if( !oldPassword || !newPassword || !confirmPassword ){
+      throw new ApiErrors(404, 'All fields are required')
+     }
+
+    
+    const user = await User.findById(req.user?._id);
+    const isCorrectPassword = await user.isCorrectPassword(oldPassword)
+    console.log('isCorrectPassword::', isCorrectPassword) 
+
+     if(!isCorrectPassword){
+      throw new ApiErrors(401, 'enter your currect password for reset');
+     }
+     
+    if(newPassword !== confirmPassword){
+      throw new ApiErrors(409, 'confirm password not match to new password')
+    }
+
+    
+       user.password = newPassword;
+       await user.save({validateBeforeSave: false})
+
+      //  send the response
+      res.status(200)
+      .json(
+        new ApiResponse( 
+          200,
+          req.user,
+          "password changed successfully"
+
+        )
+      )
+
+  } catch (error) {
+    console.log('Field to changed password ::', error);
+    res.status(500)
+    .json(
+      new ApiErrors(500, 'field to change password', [error.message])
+    )
+    
+  }
+}
+
 
 // test controller
 const testController = async (req, res) => {
@@ -239,4 +340,11 @@ const testController = async (req, res) => {
     });
   }
 };
-export default { registerController, testController, logIn, signOut};
+export default {
+                  registerController,
+                   testController,
+                   logIn, 
+                   signOut,
+                   refreshAccessToken,
+                   changedPassword
+                  };

@@ -26,6 +26,7 @@ router.post(
 
 router.post("/loggedIn", rateLimitor, userController.logIn);
 router.post("/logout", jwtVarify , userController.signOut)
+router.patch("/changepassword", jwtVarify, userController.changedPassword);
 
 // // maintanance route
 // router.get('/maintain', (req, res) =>{

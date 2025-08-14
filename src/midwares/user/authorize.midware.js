@@ -8,8 +8,8 @@ import {User}  from '../../model/users.model.js';
 try {
     
   // Debug logs
-  console.log('Cookies:', req.cookies);
-  console.log('Authorization header:', req.header('authorization'));
+  // console.log('Cookies:', req.cookies);
+  // console.log('Authorization header:', req.header('authorization'));
   
   let token = null;
   

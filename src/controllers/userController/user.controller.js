@@ -330,6 +330,52 @@ const getUser = async (req, res) => {
       .json(new ApiResponse(500, "Field to fetch the user", [error.message]));
   }
 };
+
+// update user data
+const updateUserData = async (req, res) => {
+  
+  //update only datas of user not the files
+  // save the updated data in the database
+  try {
+
+    const { fullName,  email} = req.body;
+    if(!fullName || !email){
+      throw new ApiErrors(401, 'all fields are required');
+    }
+
+    //move next
+    const user = await User.findByIdAndUpdate(
+       req.user._id,
+       {
+            $set: {
+              fullName: fullName,
+              email: email
+            },
+            
+       },
+       {
+              new: true
+            }
+
+    ).select("-password");
+
+    //send the updated data to the user
+    res.status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user,
+        "Successfully update the user"
+      )
+    )
+
+
+    
+  } catch (error) {
+    console.log('Field to update user data ::', error);
+    res.status(500).json(new ApiErrors(500, 'Field to update user data', error));
+  }
+}
 // test controller
 const testController = async (req, res) => {
   try {
@@ -351,5 +397,6 @@ export default {
   signOut,
   refreshAccessToken,
   changedPassword,
-  getUser
+  getUser,
+  updateUserData,
 };
